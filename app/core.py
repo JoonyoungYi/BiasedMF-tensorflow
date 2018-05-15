@@ -1,5 +1,5 @@
+import os
 import time
-from collections import deque
 
 import tensorflow as tf
 import numpy as np
@@ -9,60 +9,82 @@ from .utils import dataset
 from .configs import *
 from .models import init_models
 
-EPOCH_NUMBER = 10
+EPOCH_NUMBER = 10000
+EARLY_STOP = True
+EARLY_STOP_MAX_ITER = 40
 
 
-def _train(session, models, train_data, valid_data):
+def _train(session, saver, kind, models, train_data, valid_data):
+    model_file_path = _init_model_file_path(kind)
+    prev_valid_rmse = float("Inf")
+    early_stop_iters = 0
 
     for epoch in range(EPOCH_NUMBER):
-        _ = session.run(
-            [models['train_op']],
+        _, train_rmse = session.run(
+            [models['train_op'], models['rmse']],
             feed_dict={
                 models['u']: train_data['user_id'],
                 models['i']: train_data['item_id'],
                 models['r']: train_data['rating'],
             })
-        # pred_batch = np.clip(pred_batch, 1.0, 5.0)
 
-        _ = session.run(
-            [models['r_ui_hat']],
+        _, valid_rmse = session.run(
+            [models['r_ui_hat'], models['rmse']],
             feed_dict={
                 models['u']: valid_data['user_id'],
                 models['i']: valid_data['item_id'],
                 models['r']: valid_data['rating'],
             })
 
-        print('hi!')
-        break
+        if epoch % 100 == 0:
+            print('>> EPOCH:', "{:3d}".format(epoch), "{:3f}, {:3f}".format(
+                train_rmse, valid_rmse))
 
-    # print("Computing Final Test Loss...")
-    #
-    # bloss = 0
-    # for xx in range(num_batch_loop):
-    #     pred_batch = prediction.eval({
-    #         user_batch:
-    #         test_data[xx * TS_BATCH_SIZE:(xx + 1) * TS_BATCH_SIZE, 0],
-    #         movie_batch:
-    #         test_data[xx * TS_BATCH_SIZE:(xx + 1) * TS_BATCH_SIZE, 1]
-    #     })
-    #     pred_batch = np.clip(pred_batch, 1.0, 5.0)
-    #     bloss += np.mean(
-    #         np.power(pred_batch - test_data[xx * TS_BATCH_SIZE:
-    #                                         (xx + 1) * TS_BATCH_SIZE, 2], 2))
-    #     if (xx + 1) % 50 == 0:
-    #         per = float(xx + 1) / (num_batch_loop) * 100
-    #         print(str(per) + "% Completed")
-    # test_loss = np.sqrt(bloss / num_batch_loop)
-    # print("Test Loss:" + str(round(test_loss, 3)))
-    #
-    # RMSEtr[0] = RMSEts[0]
-    # saver.save(sess, 'gen-model')
-    # print("Awesome !!")
+        if EARLY_STOP:
+            early_stop_iters += 1
+            if valid_rmse < prev_valid_rmse:
+                prev_valid_rmse = valid_rmse
+                early_stop_iters = 0
+                saver.save(session, model_file_path)
+            elif early_stop_iters >= EARLY_STOP_MAX_ITER:
+                print("Early stopping ({} vs. {})...".format(
+                    prev_valid_rmse, valid_rmse))
+                break
+        else:
+            saver.save(session, model_file_path)
+
+    return model_file_path
+
+
+def _test(session, models, valid_data, test_data):
+    valid_rmse = session.run(
+        [models['rmse']],
+        feed_dict={
+            models['u']: valid_data['user_id'],
+            models['i']: valid_data['item_id'],
+            models['r']: valid_data['rating'],
+        })
+
+    test_rmse = session.run(
+        [models['rmse']],
+        feed_dict={
+            models['u']: test_data['user_id'],
+            models['i']: test_data['item_id'],
+            models['r']: test_data['rating'],
+        })
+    print("Final valid RMSE: {}, test RMSE: {}".format(valid_rmse, test_rmse))
+    return valid_rmse, test_rmse
+
+
+def _init_model_file_path(kind):
+    folder_path = 'logs/{}'.format(int(time.time() * 1000))
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    return os.path.join(folder_path, 'model.ckpt')
 
 
 def main():
     kind = dataset.ML_100K
-
     K = 5
     lambda_value = 10
 
@@ -73,4 +95,10 @@ def main():
     saver = tf.train.Saver()
     with tf.Session() as session:
         session.run(tf.global_variables_initializer())
-        _train(session, models, data['train'], data['valid'])
+        model_file_path = _train(session, saver, kind, models, data['train'],
+                                 data['valid'])
+
+        print('Loading best checkpointed model')
+        saver.restore(session, model_file_path)
+        valid_rmse, test_rmse = _test(session, models, data['valid'],
+                                      data['test'])

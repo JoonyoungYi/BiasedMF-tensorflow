@@ -31,6 +31,8 @@ def init_models(N, M, K, lambda_value):
     ])
     loss = reconstruction_loss + lambda_value * regularizer_loss
 
+    rmse = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(r, r_ui_hat))))
+
     optimizer = tf.train.RMSPropOptimizer(1e-3)
     train_op = optimizer.minimize(loss, var_list=[b_u, b_i, p, q])
     return {
@@ -39,4 +41,5 @@ def init_models(N, M, K, lambda_value):
         'r': r,
         'train_op': train_op,
         'r_ui_hat': r_ui_hat,
+        'rmse': rmse,
     }
