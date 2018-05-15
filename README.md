@@ -29,3 +29,8 @@ python train.py
 . .venv/bin/activate
 python run.py
 ```
+
+
+## Performance
+* In the `ml-100k` data, rmse is `0.9165111` in K=5, lambda_value=10. if I tune hyper parameters, the result will be better.
+* In the `ml-1m` data, rmse is `0.85840726` in K=5, lambda_value=10. if I tune hyper parameters, the result will be better.

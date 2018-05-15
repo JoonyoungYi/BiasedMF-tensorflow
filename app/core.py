@@ -29,14 +29,13 @@ def _train(session, saver, kind, models, train_data, valid_data):
             })
 
         _, valid_rmse = session.run(
-            [models['r_ui_hat'], models['rmse']],
+            [models['loss'], models['rmse']],
             feed_dict={
                 models['u']: valid_data['user_id'],
                 models['i']: valid_data['item_id'],
                 models['r']: valid_data['rating'],
             })
-
-        if epoch % 100 == 0:
+        if epoch % 10 == 0:
             print('>> EPOCH:', "{:3d}".format(epoch), "{:3f}, {:3f}".format(
                 train_rmse, valid_rmse))
 
@@ -84,7 +83,7 @@ def _init_model_file_path(kind):
 
 
 def main():
-    kind = dataset.ML_100K
+    kind = dataset.ML_1M
     K = 5
     lambda_value = 10
 
