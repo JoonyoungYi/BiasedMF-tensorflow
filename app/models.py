@@ -33,7 +33,7 @@ def init_models(N, M, K, lambda_value):
 
     rmse = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(r, r_ui_hat))))
 
-    optimizer = tf.train.RMSPropOptimizer(1e-3)
+    optimizer = tf.train.GradientDescentOptimizer(1e-3)
     train_op = optimizer.minimize(loss, var_list=[b_u, b_i, p, q])
     return {
         'u': u,
