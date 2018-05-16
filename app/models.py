@@ -29,7 +29,7 @@ def init_models(N, M, K, lambda_value):
         tf.reduce_sum(tf.square(b_u)),
         tf.reduce_sum(tf.square(b_i)),
     ])
-    loss = reconstruction_loss + lambda_value * regularizer_loss
+    loss = tf.add(reconstruction_loss, lambda_value * regularizer_loss)
 
     rmse = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(r, r_ui_hat))))
 
