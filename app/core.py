@@ -62,7 +62,7 @@ def _test(session, models, valid_data, test_data):
             models['u']: valid_data['user_id'],
             models['i']: valid_data['item_id'],
             models['r']: valid_data['rating'],
-        })
+        })[0]
 
     test_rmse = session.run(
         [models['rmse']],
@@ -70,7 +70,7 @@ def _test(session, models, valid_data, test_data):
             models['u']: test_data['user_id'],
             models['i']: test_data['item_id'],
             models['r']: test_data['rating'],
-        })
+        })[0]
     print("Final valid RMSE: {}, test RMSE: {}".format(valid_rmse, test_rmse))
     return valid_rmse, test_rmse
 
@@ -82,11 +82,7 @@ def _init_model_file_path(kind):
     return os.path.join(folder_path, 'model.ckpt')
 
 
-def main():
-    kind = dataset.ML_1M
-    K = 5
-    lambda_value = 10
-
+def main(kind, K=10, lambda_value=10):
     data = dataset.load_data(kind)
     N, M = dataset.get_N_and_M(kind)
     models = init_models(N, M, K, lambda_value)
@@ -101,3 +97,4 @@ def main():
         saver.restore(session, model_file_path)
         valid_rmse, test_rmse = _test(session, models, data['valid'],
                                       data['test'])
+        return valid_rmse, test_rmse

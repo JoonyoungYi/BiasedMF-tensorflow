@@ -18,12 +18,6 @@ mkdir logs
 deactivate
 ```
 
-* How to train
-```
-. .venv/bin/activate
-python train.py
-```
-
 * How to run
 ```
 . .venv/bin/activate
