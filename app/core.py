@@ -88,7 +88,8 @@ def main(kind, K=10, lambda_value=10):
     models = init_models(N, M, K, lambda_value)
 
     saver = tf.train.Saver()
-    with tf.Session() as session:
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.05)
+    with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as session:
         session.run(tf.global_variables_initializer())
         model_file_path = _train(session, saver, kind, models, data['train'],
                                  data['valid'])
