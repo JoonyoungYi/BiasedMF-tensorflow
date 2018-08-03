@@ -8,8 +8,8 @@ if __name__ == '__main__':
 
     for i in range(10000):
         hyper_params = {
-            'K': random.randint(1, 100),
-            'lambda_value': random.random() * 10,
+            'K': 7,
+            'lambda_value': 10,
         }
         valid_rmse, test_rmse = main(kind, **hyper_params)
 
