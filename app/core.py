@@ -72,6 +72,7 @@ def _test(session, models, valid_data, test_data):
             models['r']: test_data['rating'],
         })[0]
     print("Final valid RMSE: {}, test RMSE: {}".format(valid_rmse, test_rmse))
+
     return valid_rmse, test_rmse
 
 
@@ -94,8 +95,44 @@ def main(kind, K=10, lambda_value=10):
         model_file_path = _train(session, saver, kind, models, data['train'],
                                  data['valid'])
 
-        print('Loading best checkpointed model')
+        print('Loading best checkpointed model:', model_file_path)
+        
         saver.restore(session, model_file_path)
         valid_rmse, test_rmse = _test(session, models, data['valid'],
                                       data['test'])
+
+        # TEMP: START
+        dist = {}
+        for user_id in range(N):
+            u, i, r = _filter_target_data(data['test'], user_id)
+            if u.shape[0] == 0:
+                continue
+
+            _rmse = session.run(
+                [models['rmse']],
+                feed_dict={
+                    models['u']: u,
+                    models['i']: i,
+                    models['r']: r,
+                })[0]
+            # print(test_rmse)
+
+            key = int(_rmse * 10)
+            count = dist.get(key, 0)
+            dist[key] = count + 1
+            # break
+
+        for key, count in sorted(dist.items(), key=lambda x: x[0]):
+            print(' -', key / 10, count)
+        # TEMP: END
+
         return valid_rmse, test_rmse
+
+
+def _filter_target_data(data, u_id):
+    user_id = np.asarray(list(data['user_id']))
+    item_id = np.asarray(list(data['user_id']))
+    rating = np.asarray(list(data['rating']))
+
+    mask = np.where(data['user_id'] == u_id)
+    return user_id[mask], item_id[mask], rating[mask]
