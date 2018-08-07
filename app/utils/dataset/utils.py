@@ -26,20 +26,18 @@ def _is_file_exists(key, file_name):
 
 
 def _is_files_exists(key, file_names):
-    if len(file_names) == 0:
-        return True
-    if _is_file_exists(key, file_names[0]):
-        return _is_file_exists(key, file_names[1:])
+    for file_name in file_names:
+        if not _is_file_exists(key, file_name):
+            return False
+    return True
 
 
 def _get_file_names_from_post_fixes(file_name, post_fixes):
     return [file_name + '.' + post_fix for post_fix in post_fixes]
 
 
-def _is_splitted(key, file_name, post_fixes):
-    return _is_files_exists(key,
-                            _get_file_names_from_post_fixes(
-                                file_name, post_fixes))
+def _is_splitted(key, file_names):
+    return _is_files_exists(key, file_names)
 
 
 def split_data(key, file_name, post_fixes, rate=0.9):
@@ -47,7 +45,7 @@ def split_data(key, file_name, post_fixes, rate=0.9):
 
     a_file_name, b_file_name = _get_file_names_from_post_fixes(
         file_name, post_fixes)
-    if not _is_splitted(key, file_name, post_fixes):
+    if not _is_splitted(key, [a_file_name, b_file_name]):
         file_path = get_file_path(key, file_name)
         a_file_path = get_file_path(key, a_file_name)
         b_file_path = get_file_path(key, b_file_name)
