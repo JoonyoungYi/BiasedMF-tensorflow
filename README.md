@@ -26,5 +26,5 @@ python run.py
 
 
 ## Performance
-* In the `ml-100k` data, rmse is `0.9099072394` in K=7, lambda_value=10(average of 61 tests).  
-* In the `ml-1m` data, rmse is `0.85840726` in K=5, lambda_value=10. if I tune hyper parameters, the result will be better.
+* In the `ml-100k` data, rmse is `0.9099072394` in K=7, lambda_value=10.  
+* In the `ml-1m` data, rmse is `0.8504005670547485` in K=11, lambda_value=10.

@@ -1,8 +1,13 @@
 import tensorflow as tf
 import numpy as np
 
+from .configs import *
 
-def init_models(N, M, K, lambda_value):
+
+def init_models(K, lambda_value, batch_manager):
+    N, M = batch_manager.n_user, batch_manager.n_item
+    mu = batch_manager.mu
+
     u = tf.placeholder(tf.int32, [None], name='u')
     i = tf.placeholder(tf.int32, [None], name='i')
     r = tf.placeholder(tf.float32, [None], name='r')
@@ -12,7 +17,6 @@ def init_models(N, M, K, lambda_value):
     p_lookup = tf.nn.embedding_lookup(p, u)
     q_lookup = tf.nn.embedding_lookup(q, i)
 
-    mu = tf.reduce_mean(r)
     b_u = tf.Variable(tf.zeros([N]))
     b_i = tf.Variable(tf.zeros([M]))
     b_u_lookup = tf.nn.embedding_lookup(b_u, u)
@@ -33,12 +37,16 @@ def init_models(N, M, K, lambda_value):
 
     rmse = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(r, r_ui_hat))))
 
-    optimizer = tf.train.GradientDescentOptimizer(1e-4)
+    optimizer = tf.train.AdamOptimizer(LEARNING_RATE)
     train_op = optimizer.minimize(loss, var_list=[b_u, b_i, p, q])
     return {
         'u': u,
         'i': i,
         'r': r,
+        'p': p,
+        'q': q,
+        'b_u': b_u,
+        'b_i': b_i,
         'train_op': train_op,
         'r_ui_hat': r_ui_hat,
         'rmse': rmse,

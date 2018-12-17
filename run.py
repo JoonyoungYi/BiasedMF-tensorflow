@@ -1,12 +1,13 @@
 import random
 
 from app.core import main
-from app.utils import dataset
+from app.utils.dataset import DatasetManager
 
 if __name__ == '__main__':
-    kind = dataset.ML_100K
+    kind = DatasetManager.KIND_MOVIELENS_100K
+    # kind = DatasetManager.KIND_MOVIELENS_1M
+    # kind = DatasetManager.KIND_MOVIELENS_10M
 
-    # for i in range(10000):
     hyper_params = {
         'K': 7,
         'lambda_value': 10,
